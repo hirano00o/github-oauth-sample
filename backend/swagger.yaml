@@ -1,0 +1,81 @@
+swagger: "2.0"
+info:
+  title: github oauth login sample backend
+  description: connect to github.
+  version: 1.0
+  contact:
+    email: uday6827@gmail.com
+  license:
+    name: "Apache 2.0"
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+host: api.localhost
+basePath: /v1
+schemes:
+  - https
+  - http
+
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: "Authorization: Bearer"
+
+paths:
+  /auth/github/login:
+    get:
+      summary: redirect github to signin
+      security: []
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+      responses:
+        307:
+          description: redirect to github
+          schema:
+            type: object
+            properties:
+        default:
+          description: Unexpected error
+  /auth/github/callback:
+    get:
+      summary: callback from github
+      security: []
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  code:
+                    type: string
+                  state:
+                    type: string
+      responses:
+        200:
+          description: return token using application
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                example: aw9e8y24tpa0gw23ra0w9eut02t2ngwp0jbpw
+        400:
+          description: the code gets from github is error
+        default:
+          description: Unexpected error
