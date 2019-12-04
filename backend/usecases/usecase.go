@@ -12,11 +12,11 @@ import (
 // OauthRepository is ...
 type OauthRepository interface {
 	StoreState(string, string, time.Time) error
-	FindBySessionID(string) (string, error)
+	FindBySessionID(string) (int, string, error)
 	FindBySessionIDAndUserToken(string, string) (time.Time, int, error)
 	FindByUserTokenID(int) (string, string, string, time.Time, error)
-	StoreUserToken(string, string, time.Time, int) (int, error)
-	StoreGithubToken(string, string, string, time.Time) (int, error)
+	StoreUserToken(string, string, time.Time) (int, error)
+	StoreGithubToken(string, string, string, time.Time, int) error
 }
 
 // OauthInteractor is ...
@@ -64,7 +64,7 @@ func createRand() (randVal string) {
 // RegistToken is ...
 func (oi *OauthInteractor) RegistToken(ctx *gin.Context, conf domain.ServerConf, c domain.Callback) (user domain.User, err error) {
 	// recieved state is expected or not
-	state, err := oi.OauthRepository.FindBySessionID(c.ID)
+	id, state, err := oi.OauthRepository.FindBySessionID(c.ID)
 	if err != nil {
 		return
 	}
@@ -77,7 +77,7 @@ func (oi *OauthInteractor) RegistToken(ctx *gin.Context, conf domain.ServerConf,
 	if err != nil {
 		return
 	}
-	id, err := oi.OauthRepository.StoreGithubToken(githubToken.AccessToken, githubToken.TokenType, githubToken.RefreshToken, githubToken.Expiry)
+	err = oi.OauthRepository.StoreGithubToken(githubToken.AccessToken, githubToken.TokenType, githubToken.RefreshToken, githubToken.Expiry, id)
 	if err != nil {
 		return
 	}
@@ -85,7 +85,7 @@ func (oi *OauthInteractor) RegistToken(ctx *gin.Context, conf domain.ServerConf,
 	// make user token
 	token := createRand()
 	expiry := time.Now().Add(7 * 24 * time.Hour)
-	count, err := oi.OauthRepository.StoreUserToken(c.ID, token, expiry, id)
+	count, err := oi.OauthRepository.StoreUserToken(c.ID, token, expiry)
 	if err != nil {
 		return
 	}
