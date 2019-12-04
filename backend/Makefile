@@ -8,7 +8,7 @@ start:
 	./app
 
 mysql.start:
-	docker run -d \
+	docker run --rm -d \
 		-e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
 		-e MYSQL_USER=${DB_USER} \
 		-e MYSQL_PASSWORD=${DB_PASSWORD} \
