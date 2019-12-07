@@ -10,7 +10,7 @@ type OauthRepository struct {
 // StoreState is ...
 func (r *OauthRepository) StoreState(state, session string, expiry time.Time) (err error) {
 	statement := `INSERT INTO users (session_id, state, expiry) VALUES (?, ?, ?)`
-	_, err = r.Execute(statement, session, state, expiry.Format("1990-01-01 01:00:00"))
+	_, err = r.Execute(statement, session, state, expiry.Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return
 	}
@@ -20,7 +20,7 @@ func (r *OauthRepository) StoreState(state, session string, expiry time.Time) (e
 // StoreGithubToken is ...
 func (r *OauthRepository) StoreGithubToken(tk, tp, reftk string, exp time.Time, users_id int) (err error) {
 	statement := `INSERT INTO github_tokens (token, type, refresh_token, expiry, users_id) VALUES (?, ?, ?, ?, ?)`
-	res, err := r.Execute(statement, tk, tp, reftk, exp.Format("1990-01-01 01:00:00"), users_id)
+	_, err = r.Execute(statement, tk, tp, reftk, exp.Format("2006-01-02 15:04:05"), users_id)
 	if err != nil {
 		return
 	}
