@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -9,13 +8,15 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
 func setCookie(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
-		Name:  "session",
+		Name:  "token",
 		Value: createRand(),
 	}
 	http.SetCookie(w, cookie)
@@ -65,9 +66,9 @@ func main() {
 
 // Callback is callback from github
 type Callback struct {
-	Session string `json:"session_id"`
-	Code    string `json:"code"`
-	State   string `json:"state"`
+	Token string `json:"token"`
+	Code  string `json:"code"`
+	State string `json:"state"`
 }
 
 func newError(err error, w http.ResponseWriter) {
@@ -77,20 +78,7 @@ func newError(err error, w http.ResponseWriter) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
-	if err != nil {
-		newError(err, w)
-		return
-	}
-
-	val, err := json.Marshal(Callback{
-		Session: cookie.Value,
-	})
-	if err != nil {
-		newError(err, w)
-		return
-	}
-	res, err := http.Post("http://localhost:8080/v1/auth/github/login", "application/json", bytes.NewBuffer(val))
+	res, err := http.Get("http://localhost:8080/v1/auth/github/login")
 	if err != nil {
 		newError(err, w)
 		return
@@ -99,6 +87,26 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	location := res.Header.Get("Location")
 	res.Header.Get("Location")
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		newError(err, w)
+		return
+	}
+	log.Println(string(body))
+	callback := new(Callback)
+	err = json.Unmarshal(body, &callback)
+	if err != nil {
+		newError(err, w)
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:  "token",
+		Value: callback.Code,
+	}
+	http.SetCookie(w, cookie)
 
 	http.Redirect(w, r, location, res.StatusCode)
 }
@@ -110,47 +118,40 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie("token")
 	if err != nil {
 		newError(err, w)
 		return
 	}
 
-	val, err := json.Marshal(Callback{
-		Session: cookie.Value,
-		Code:    r.Form.Get("code"),
-		State:   r.Form.Get("state"),
-	})
+	postUrl := "http://localhost:8080/v1/auth/github/callback"
+	val := url.Values{}
+	val.Set("code", r.Form.Get("code"))
+	val.Set("state", r.Form.Get("state"))
+	log.Println(r)
+	req, err := http.NewRequest("POST", postUrl, strings.NewReader(val.Encode()))
 	if err != nil {
 		newError(err, w)
 		return
 	}
-	res, err := http.Post("htp://localhost:8080/v1/auth/github/callback", "application/json", bytes.NewBuffer(val))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+cookie.Value)
+	client := &http.Client{}
+	res, err := client.Do(req)
 	if err != nil {
 		newError(err, w)
 		return
 	}
 	log.Println(res)
 
-	//defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		newError(err, w)
 		return
 	}
+	log.Println(string(body))
 
-	/*
-		src := p.Config.TokenSource(ctx, p.Token)
-		httpClient := oauth2.NewClient(ctx, src)
-
-		u, err := p.GetUsers(ctx, httpClient)
-		if err != nil {
-			log.Printf("get user error:" + err.Error())
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, "get user error")
-			return
-		}
-	*/
 	tpl := template.Must(template.ParseFiles("templates/index.html"))
 	//tpl.Execute(w, u)
 	tpl.Execute(w, nil)

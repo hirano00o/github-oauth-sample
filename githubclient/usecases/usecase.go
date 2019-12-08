@@ -62,6 +62,10 @@ func createRand(n int) (randVal string) {
 	return
 }
 
+// GetUserFromGithub gets username and avater url
+func (oi *OauthInteractor) GetUserFromGithub(g domain.GithubToken) (err error) {
+}
+
 // RegistGithubToken creates and registration github token
 func (oi *OauthInteractor) RegistGithubToken(ctx *gin.Context, conf domain.ServerConf, c domain.Callback) (user domain.Token, err error) {
 	// recieved state is expected or not

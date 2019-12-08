@@ -28,9 +28,7 @@ func NewController(db database.DBHandler) *OauthController {
 
 // Login returns github login url
 func (oc *OauthController) Login(c Context, conf domain.ServerConf) {
-	s := domain.Session{}
-	c.Bind(&s)
-	logininfo, err := oc.Interactor.SetupGithubLogin(conf, s)
+	logininfo, err := oc.Interactor.CreateGithubLoginURL(conf)
 	if err != nil {
 		zap.S().Errorw(err.Error())
 		c.SecureJSON(http.StatusInternalServerError, NewError(err))
@@ -43,7 +41,7 @@ func (oc *OauthController) Login(c Context, conf domain.ServerConf) {
 func (oc *OauthController) Callback(c *gin.Context, conf domain.ServerConf) {
 	callback := domain.Callback{}
 	c.Bind(&callback)
-	user, err := oc.Interactor.RegistToken(c, conf, callback)
+	user, err := oc.Interactor.RegistGithubToken(c, conf, callback)
 	if err != nil {
 		zap.S().Errorw(err.Error())
 		c.SecureJSON(http.StatusInternalServerError, NewError(err))
@@ -53,8 +51,8 @@ func (oc *OauthController) Callback(c *gin.Context, conf domain.ServerConf) {
 
 // Auth authenticate user and return github token
 func (oc *OauthController) Auth(c Context) {
-	a := domain.Auth{}
-	c.Bind(&a)
+	a := domain.User{}
+	a.Token = c.GetHeader("Authorization")
 	token, err := oc.Interactor.AuthToken(a)
 	if err != nil {
 		zap.S().Errorw(err.Error())

@@ -28,22 +28,21 @@ paths:
       security: []
       produces:
         - application/json
-      parameters:
-        - in: query
-          name: filter
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  session_id:
-                    type: string
       responses:
         307:
           description: redirect to github
           schema:
             type: object
             properties:
+              token:
+                type: string
+                example: aw9e8y24tpa0gw23ra0w9eut02t2ngwp
+              expiry:
+                type: string
+                example: 2019-12-12 00:11:22
+              state:
+                type: string
+                example: t23ljg2o4jlq34jlajw4tjq4rojljs53
         default:
           description: Unexpected error
   /auth/github/callback:
@@ -60,21 +59,24 @@ paths:
               schema:
                 type: object
                 properties:
-                  session_id:
+                  token:
                     type: string
+                    example: aw9e8y24tpa0gw23ra0w9eut02t2ngwp
                   code:
                     type: string
+                    example: 130850
                   state:
                     type: string
+                    example: t23ljg2o4jlq34jlajw4tjq4rojljs53
       responses:
         200:
           description: return token using application
           schema:
             type: object
             properties:
-              token:
+              expiry:
                 type: string
-                example: aw9e8y24tpa0gw23ra0w9eut02t2ngwp0jbpw
+                example: 2019-12-12 00:11:22
         400:
           description: the code gets from github is error
         default:

@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Router is gin router
+// Router is routing API path
 func Router() *gin.Engine {
 	conf := NewConf()
 	controller := controllers.NewController(NewDB(conf.DBConf.Database, conf.DBConf.DSN))
