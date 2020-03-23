@@ -1,6 +1,11 @@
 # github-oauth-sample
 githubの認証用APIサーバのサンプル(WIP)
 
+## 構成
+frontend -> backend -> DB  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└------> github client <- DB  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└---------> github API
+
 ## frontend
 認証用APIサーバを使ってログインを試すWebサーバ
 
@@ -28,5 +33,3 @@ $ make mysql.start
 $ export GITHUB_CLIENT_ID=xxxxxxxx GITHUB_CLIENT_SECRET=yyyyyyyy SERVER_HOST=example.com
 $ make start
 ```
-
-
